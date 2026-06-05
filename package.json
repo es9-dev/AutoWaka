@@ -1,0 +1,107 @@
+{
+  "name": "autowaka",
+  "displayName": "AutoWaka - Automatic Wakatime Projects",
+  "description": "Rule-driven Wakatime Projects Extension for VSCode",
+  "publisher": "es9-dev",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "autowaka.syncNow",
+        "title": "AutoWaka: Sync Now"
+      }
+    ],
+    "configuration": {
+      "title": "AutoWaka",
+      "properties": {
+        "autowaka.rules": {
+          "type": "array",
+          "default": [],
+          "markdownDescription": "Array of rules that determine when and how `.wakatime-project` files are auto-created. Rules are evaluated by proximity; the rule targeting a directory **closest** to the workspace folder wins, regardless of array order.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pathPattern": {
+                "type": "string",
+                "default": ".*",
+                "description": "Regex matched against the workspace folder's absolute path. Use .* to match all folders."
+              },
+              "requireGitRepo": {
+                "type": "boolean",
+                "default": true,
+                "description": "Only trigger this rule if a .git/ directory exists in the folder."
+              },
+              "projectName": {
+                "type": "string",
+                "markdownDescription": "The name of the WakaTime project. You can use placeholders like `{folder}`, `{parent}`, and `{parentN}` to dynamically generate names infinitely upwards. E.g. `Work: {parent3}/{folder} (Client)`."
+              },
+              "syncGitExcludes": {
+                "type": "boolean",
+                "default": false,
+                "markdownDescription": "If true, synchronizes patterns from `.gitignore` and `.git/info/exclude` into WakaTime's local `.wakatime` file."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "autowaka.existingFileBehavior": {
+          "type": "string",
+          "enum": [
+            "skip",
+            "prompt",
+            "overwrite"
+          ],
+          "default": "skip",
+          "markdownDescription": "What to do when a `.wakatime-project` file already exists in a matched folder.\n- **skip**: Do nothing.\n- **prompt**: Ask whether to update.\n- **overwrite**: Always overwrite with the rule-generated name."
+        },
+        "autowaka.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the current WakaTime project name in the status bar."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "pnpm run check-types && pnpm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/glob-to-regexp": "^0.4.4",
+    "@types/ini": "^4.1.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.27.3",
+    "eslint": "^9.39.3",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
+  },
+  "dependencies": {
+    "glob-to-regexp": "^0.4.1",
+    "ini": "^7.0.0"
+  }
+}
