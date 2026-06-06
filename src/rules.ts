@@ -9,6 +9,7 @@ export interface RuleConfig {
     requireGitRepo?: boolean;
     projectName?: string;
     syncGitExcludes?: boolean;
+    scanNestedGitRepos?: boolean;
 }
 
 /**
@@ -24,9 +25,15 @@ export interface MatchResult {
  * Evaluate a list of rules against a workspace folder path.
  * Returns the first matching rule's result, or null if no rule matches.
  */
-export function evaluateRules(folderPath: string, rules: RuleConfig[]): MatchResult | null {
+export function evaluateRules(folderPath: string, rules: RuleConfig[], isNested: boolean = false): MatchResult | null {
     // Find all rules that match the folder conditions
-    const matchingRules = rules.filter(rule => matchesConditions(folderPath, rule));
+    const matchingRules = rules.filter(rule => {
+        // If this folder was found via a nested scan, ONLY apply rules that explicitly opted-in
+        if (isNested && !rule.scanNestedGitRepos) {
+            return false;
+        }
+        return matchesConditions(folderPath, rule);
+    });
 
     if (matchingRules.length === 0) {
         return null;
