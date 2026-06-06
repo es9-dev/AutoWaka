@@ -41,6 +41,11 @@
                 "default": true,
                 "description": "Only trigger this rule if a .git/ directory exists in the folder."
               },
+              "scanNestedGitRepos": {
+                "type": "boolean",
+                "default": false,
+                "markdownDescription": "If true, AutoWaka will recursively search for nested Git repositories within any workspace folder that matches this rule's pathPattern, and apply this rule to them."
+              },
               "projectName": {
                 "type": "string",
                 "markdownDescription": "The name of the WakaTime project. You can use placeholders like `{folder}`, `{parent}`, and `{parentN}` to dynamically generate names infinitely upwards. E.g. `Work: {parent3}/{folder} (Client)`."

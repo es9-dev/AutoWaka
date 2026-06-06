@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'node:path';
 import { evaluateRules, RuleConfig } from './rules';
 import { syncGitExcludes } from './sync';
 import { readWakaTimeProject, createWakaTimeProject, wakaTimeProjectExists } from './project-file';
@@ -77,12 +78,45 @@ async function processAllFolders(context: vscode.ExtensionContext): Promise<void
         return;
     }
 
-    // Track the project name of the first workspace folder for the status bar
+    // 1. Gather all target folders (Root workspaces first)
+    const targetFolders = new Map<string, { isNested: boolean }>();
+    
+    for (const folder of workspaceFolders) {
+        targetFolders.set(folder.uri.fsPath, { isNested: false });
+    }
+
+    // 2. Pre-scan for nested git repos if ANY rule requires it
+    const needsNestedScan = rules.some(r => r.scanNestedGitRepos);
+    if (needsNestedScan) {
+        console.log('[AutoWaka] Pre-scanning for nested git repositories...');
+        // Find both standard repos (.git/HEAD) and submodules (.git file)
+        const gitHeads = await vscode.workspace.findFiles('**/.git/HEAD', '**/node_modules/**');
+        const gitFiles = await vscode.workspace.findFiles('**/.git', '**/node_modules/**');
+        
+        for (const uri of [...gitHeads, ...gitFiles]) {
+            const fsPath = uri.fsPath;
+            let repoRoot = '';
+            
+            // If it ends with HEAD, the parent is .git, and grandparent is the project root
+            if (fsPath.endsWith('HEAD')) {
+                repoRoot = path.dirname(path.dirname(fsPath));
+            } else {
+                repoRoot = path.dirname(fsPath);
+            }
+
+            // Don't overwrite root folders if they are already mapped
+            if (!targetFolders.has(repoRoot)) {
+                targetFolders.set(repoRoot, { isNested: true });
+            }
+        }
+    }
+
+    // Track the project name of the first ROOT workspace folder for the status bar
     let primaryProjectName: string | null = null;
 
-    for (const folder of workspaceFolders) {
-        const folderPath = folder.uri.fsPath;
-        const result = evaluateRules(folderPath, rules);
+    // 3. Process all gathered folders
+    for (const [folderPath, meta] of targetFolders.entries()) {
+        const result = evaluateRules(folderPath, rules, meta.isNested);
 
         if (!result) {
             console.log(`[AutoWaka] No rule matched for: ${folderPath}`);
@@ -115,8 +149,8 @@ async function processAllFolders(context: vscode.ExtensionContext): Promise<void
             await syncGitExcludes(folderPath);
         }
 
-        // Track the first folder's project name for status bar
-        if (!primaryProjectName) {
+        // Track the first ROOT folder's project name for status bar
+        if (!meta.isNested && !primaryProjectName) {
             const currentName = await readWakaTimeProject(folderPath);
             primaryProjectName = currentName;
         }
