@@ -3,7 +3,7 @@
   "displayName": "AutoWaka - Automatic Wakatime Projects",
   "description": "Rule-driven Wakatime Projects Extension for VSCode",
   "publisher": "es9-dev",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.90.0"
   },
