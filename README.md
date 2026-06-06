@@ -50,6 +50,7 @@ If a folder matches multiple rules in your settings, the rule whose target path 
 ### Configuration Options
 - `pathPattern`: (Optional) A regular expression string to limit the rule to specific directory paths on your machine (e.g. `".*/Projects/.*"`). If omitted, it defaults to `.*` (matches all paths). Note: Windows backslashes are automatically converted to forward slashes before evaluation, so you can always use clean forward slashes in your config!
 - `requireGitRepo`: If set to `true`, the rule will only trigger if a `.git/` directory exists in the folder root.
+- `scanNestedGitRepos`: If set to `true`, AutoWaka will recursively search for nested Git repositories (e.g., submodules or monorepo packages) within the matching folder, and apply this rule to them as well.
 - `projectName`: The template for the generated name. Placeholders include `{folder}` (the current folder's name), `{parent}` (the immediate parent directory), and `{parentN}` where N is any number (e.g., `{parent2}` for grandparent, `{parent5}` for 5 levels up). For example, `Projects/{parent2}/{folder}`.
 - `syncGitExcludes`: If set to `true`, the extension reads your `.gitignore` and `.git/info/exclude` files, merges them with your global `~/.wakatime.cfg` exclusions, and writes them to a local `.wakatime` file so WakaTime won't track your ignored files.
 
